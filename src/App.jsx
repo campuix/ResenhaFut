@@ -1,0 +1,338 @@
+import { useState } from 'react'
+import { useAuth } from './hooks/useAuth'
+import { useProximoJogo } from './hooks/useProximoJogo'
+import { useSorteio } from './hooks/useSorteio'
+import { useRateio } from './hooks/useRateio'
+import { useGrupo } from './hooks/useGrupo'
+import { useHistorico } from './hooks/useHistorico'
+import { supabase, supabaseConfigured } from './lib/supabase'
+import { Header } from './components/Header'
+import { TabBar } from './components/TabBar'
+import { BottomSheet } from './components/BottomSheet'
+import { CenterMessage } from './components/CenterMessage'
+import { LoginScreen } from './screens/Login'
+import { JoinScreen } from './screens/Join'
+import { ProximoJogoScreen } from './screens/ProximoJogo'
+import { SorteioScreen } from './screens/Sorteio'
+import { RateioScreen } from './screens/Rateio'
+import { GrupoScreen } from './screens/Grupo'
+import { HistoricoScreen } from './screens/Historico'
+import { CriarJogoScreen } from './screens/CriarJogo'
+import { mesAbrev } from './lib/format'
+
+const TAB_TITLES = {
+  jogo: 'Próximo jogo',
+  times: 'Sorteio',
+  caixa: 'Rateio',
+  grupo: 'Grupo',
+  hist: 'Histórico',
+}
+
+function AppShell({ userId }) {
+  const [tab, setTab] = useState('jogo')
+  const { loading, error, data, toggleMinhaPresenca, criarJogo, encerrarJogo } = useProximoJogo(userId)
+  const [toggling, setToggling] = useState(false)
+  const { loading: sorteioLoading, error: sorteioError, data: sorteioData, sortear } = useSorteio(userId)
+  const {
+    loading: rateioLoading,
+    error: rateioError,
+    data: rateioData,
+    alternarPagamento,
+    definirResponsavel,
+    salvarMinhaChavePix,
+  } = useRateio(userId)
+  const { loading: grupoLoading, error: grupoError, data: grupoData, setPapel, removerMembro } = useGrupo(userId)
+  const { loading: histLoading, error: histError, data: histData } = useHistorico(userId)
+
+  const [sheet, setSheet] = useState(null)
+  const [papelSel, setPapelSel] = useState(null)
+
+  const handleTogglePagamento = async (usuarioId, situacaoAtual) => {
+    try {
+      await alternarPagamento(usuarioId, situacaoAtual)
+    } catch (err) {
+      alert('Não deu para atualizar o pagamento: ' + err.message)
+    }
+  }
+
+  const closeSheet = () => {
+    setSheet(null)
+    setPapelSel(null)
+  }
+
+  const handleAbrirPapel = (sel) => {
+    setPapelSel(sel)
+    setSheet('papel')
+  }
+
+  const handleSetPapel = async (novoPapel) => {
+    try {
+      await setPapel(papelSel.usuarioId, novoPapel)
+      closeSheet()
+    } catch (err) {
+      alert('Não deu para mudar o papel: ' + err.message)
+    }
+  }
+
+  const handleRemoverMembro = async () => {
+    try {
+      await removerMembro(papelSel.usuarioId)
+      closeSheet()
+    } catch (err) {
+      alert('Não deu para remover do grupo: ' + err.message)
+    }
+  }
+
+  const handleEscolherResponsavel = async (usuarioId) => {
+    try {
+      await definirResponsavel(usuarioId)
+      closeSheet()
+    } catch (err) {
+      alert('Não deu para trocar o responsável: ' + err.message)
+    }
+  }
+
+  const handleSalvarChavePix = async (chave) => {
+    try {
+      await salvarMinhaChavePix(chave)
+    } catch (err) {
+      alert('Não deu para salvar a chave Pix: ' + err.message)
+      throw err
+    }
+  }
+
+  const handleToggle = async () => {
+    setToggling(true)
+    try {
+      await toggleMinhaPresenca()
+    } catch (err) {
+      alert('Não deu para atualizar sua presença: ' + err.message)
+    } finally {
+      setToggling(false)
+    }
+  }
+
+  const handleCriarJogo = async (payload) => {
+    await criarJogo(payload)
+  }
+
+  const handleEncerrarJogo = async () => {
+    try {
+      await encerrarJogo()
+    } catch (err) {
+      alert('Não deu para encerrar o jogo: ' + err.message)
+    }
+  }
+
+  const papel = data?.papel
+  const eyebrow = data?.jogo ? `Resenha de ${mesAbrev(new Date(data.jogo.inicio)).toLowerCase()}` : 'Resenha Fut'
+
+  let jogoContent
+  if (loading) {
+    jogoContent = <CenterMessage>Carregando…</CenterMessage>
+  } else if (error) {
+    jogoContent = <CenterMessage>Não deu para carregar: {error.message}</CenterMessage>
+  } else if (data?.semGrupo) {
+    jogoContent = <CenterMessage>Você ainda não faz parte de um grupo.</CenterMessage>
+  } else if (data?.semJogo) {
+    jogoContent =
+      data.papel === 'dono' || data.papel === 'admin' ? (
+        <CriarJogoScreen onCriar={handleCriarJogo} />
+      ) : (
+        <CenterMessage>Nenhum jogo marcado no momento.</CenterMessage>
+      )
+  } else if (data) {
+    jogoContent = (
+      <ProximoJogoScreen
+        userId={userId}
+        jogoData={data}
+        onToggle={handleToggle}
+        toggling={toggling}
+        onEncerrar={handleEncerrarJogo}
+      />
+    )
+  }
+
+  let timesContent
+  if (sorteioLoading) {
+    timesContent = <CenterMessage>Carregando…</CenterMessage>
+  } else if (sorteioError) {
+    timesContent = <CenterMessage>Não deu para carregar: {sorteioError.message}</CenterMessage>
+  } else if (sorteioData?.semGrupo) {
+    timesContent = <CenterMessage>Você ainda não faz parte de um grupo.</CenterMessage>
+  } else if (sorteioData?.semJogo) {
+    timesContent = <CenterMessage>Nenhum jogo marcado no momento.</CenterMessage>
+  } else if (sorteioData) {
+    timesContent = <SorteioScreen userId={userId} sorteioData={sorteioData} onSortear={sortear} />
+  }
+
+  let caixaContent
+  if (rateioLoading) {
+    caixaContent = <CenterMessage>Carregando…</CenterMessage>
+  } else if (rateioError) {
+    caixaContent = <CenterMessage>Não deu para carregar: {rateioError.message}</CenterMessage>
+  } else if (rateioData?.semGrupo) {
+    caixaContent = <CenterMessage>Você ainda não faz parte de um grupo.</CenterMessage>
+  } else if (rateioData?.semJogo) {
+    caixaContent = <CenterMessage>Nenhum jogo marcado no momento.</CenterMessage>
+  } else if (rateioData) {
+    caixaContent = (
+      <RateioScreen
+        userId={userId}
+        rateioData={rateioData}
+        onToggle={handleTogglePagamento}
+        onCobrar={() => setSheet('cobrar')}
+        onTrocarResponsavel={() => setSheet('responsavel')}
+        onSalvarChavePix={handleSalvarChavePix}
+      />
+    )
+  }
+
+  let grupoContent
+  if (grupoLoading) {
+    grupoContent = <CenterMessage>Carregando…</CenterMessage>
+  } else if (grupoError) {
+    grupoContent = <CenterMessage>Não deu para carregar: {grupoError.message}</CenterMessage>
+  } else if (grupoData?.semGrupo) {
+    grupoContent = <CenterMessage>Você ainda não faz parte de um grupo.</CenterMessage>
+  } else if (grupoData) {
+    grupoContent = (
+      <GrupoScreen
+        userId={userId}
+        grupoData={grupoData}
+        onAbrirPapel={handleAbrirPapel}
+        onConvidar={() => setSheet('convite')}
+      />
+    )
+  }
+
+  let histContent
+  if (histLoading) {
+    histContent = <CenterMessage>Carregando…</CenterMessage>
+  } else if (histError) {
+    histContent = <CenterMessage>Não deu para carregar: {histError.message}</CenterMessage>
+  } else if (histData?.semGrupo) {
+    histContent = <CenterMessage>Você ainda não faz parte de um grupo.</CenterMessage>
+  } else if (histData) {
+    histContent = <HistoricoScreen historicoData={histData} />
+  }
+
+  const conviteLink = grupoData?.conviteSlug ? `${window.location.origin}/j/${grupoData.conviteSlug}` : ''
+
+  let cobrarMensagem = ''
+  if (rateioData?.confirmados && data?.jogo) {
+    const paidCount = rateioData.confirmados.filter((p) => rateioData.pagamentos[p.usuario_id] === 'confirmado').length
+    const openCount = rateioData.confirmados.length - paidCount
+    const jogoDate = new Date(data.jogo.inicio)
+    const dd = String(jogoDate.getDate()).padStart(2, '0')
+    const mm = String(jogoDate.getMonth() + 1).padStart(2, '0')
+    cobrarMensagem = `Fechou a de ${dd}/${mm}: R$ ${rateioData.perHead} por cabeça. Faltam ${openCount}.`
+    if (rateioData.chavePix) {
+      cobrarMensagem += ` Pix de ${rateioData.responsavelNome}: ${rateioData.chavePix} 👇`
+    }
+  }
+
+  return (
+    <div
+      style={{
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: '#08130E',
+        color: '#EAF3EC',
+        fontFamily: 'Barlow, sans-serif',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
+      <Header
+        eyebrow={eyebrow.toUpperCase()}
+        title={TAB_TITLES[tab]}
+        papel={papel}
+        onConvidar={() => setSheet('convite')}
+      />
+      <div style={{ flex: 1, overflow: 'auto', padding: '0 20px 120px' }}>
+        {tab === 'jogo' && jogoContent}
+        {tab === 'times' && timesContent}
+        {tab === 'caixa' && caixaContent}
+        {tab === 'grupo' && grupoContent}
+        {tab === 'hist' && histContent}
+      </div>
+      <TabBar tab={tab} onChange={setTab} />
+
+      <BottomSheet
+        sheet={sheet}
+        onClose={closeSheet}
+        convite={{ link: conviteLink }}
+        cobrar={{ mensagem: cobrarMensagem }}
+        papel={
+          papelSel
+            ? {
+                nome: papelSel.nome,
+                papelAtual: papelSel.papelAtual,
+                onSetPapel: handleSetPapel,
+                onRemover: handleRemoverMembro,
+              }
+            : null
+        }
+        responsavel={{
+          membros: grupoData?.membros?.map((m) => ({
+            usuario_id: m.usuario_id,
+            nome: m.usuario_id === userId ? 'Você' : m.nome,
+          })) ?? [],
+          responsavelId: rateioData?.responsavelId,
+          onEscolher: handleEscolherResponsavel,
+        }}
+      />
+    </div>
+  )
+}
+
+export default function App() {
+  const session = useAuth()
+
+  if (!supabaseConfigured) {
+    return (
+      <CenterMessage>
+        Faltam as variáveis <code>VITE_SUPABASE_URL</code> e <code>VITE_SUPABASE_ANON_KEY</code> no arquivo{' '}
+        <code>.env</code> (veja <code>.env.example</code>). Depois de criar o <code>.env</code>, reinicie o servidor
+        de desenvolvimento.
+      </CenterMessage>
+    )
+  }
+
+  const matchConvite = window.location.pathname.match(/^\/j\/([^/]+)/)
+  if (matchConvite) {
+    return <JoinScreen slug={matchConvite[1]} />
+  }
+
+  if (session === undefined) {
+    return <CenterMessage>Carregando…</CenterMessage>
+  }
+
+  if (session === null) {
+    return <LoginScreen />
+  }
+
+  return (
+    <div style={{ minHeight: '100dvh', background: '#08130E' }}>
+      <div style={{ maxWidth: '480px', margin: '0 auto', minHeight: '100dvh', position: 'relative' }}>
+        <AppShell userId={session.user.id} />
+        <div
+          onClick={() => supabase.auth.signOut()}
+          style={{
+            position: 'fixed',
+            top: '10px',
+            right: '10px',
+            zIndex: 50,
+            font: "500 9px/1 'IBM Plex Mono', monospace",
+            color: 'rgba(234,243,236,.4)',
+            cursor: 'pointer',
+          }}
+        >
+          sair
+        </div>
+      </div>
+    </div>
+  )
+}
