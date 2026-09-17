@@ -184,6 +184,7 @@ function AppShell({ userId }) {
         toggling={toggling}
         onEncerrar={handleEncerrarJogo}
         onEditar={() => setFormJogo('editar')}
+        onCriarOutro={() => setFormJogo('criar')}
       />
     )
   }

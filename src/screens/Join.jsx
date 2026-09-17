@@ -24,6 +24,11 @@ function Shell({ children }) {
   )
 }
 
+function abertoEmNavegadorEmbutido() {
+  const ua = navigator.userAgent || ''
+  return /WhatsApp|FBAN|FBAV|Instagram|Line\/|MicroMessenger/i.test(ua)
+}
+
 function Eyebrow({ children }) {
   return (
     <div
@@ -49,6 +54,7 @@ export function JoinScreen({ slug }) {
   const [erro, setErro] = useState('')
   const [email, setEmail] = useState('')
   const [linkStatus, setLinkStatus] = useState('idle')
+  const [erroLink, setErroLink] = useState('')
 
   useEffect(() => {
     let cancelado = false
@@ -99,11 +105,17 @@ export function JoinScreen({ slug }) {
     e.preventDefault()
     if (!email) return
     setLinkStatus('sending')
+    setErroLink('')
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: window.location.href },
     })
-    setLinkStatus(error ? 'error' : 'sent')
+    if (error) {
+      setErroLink(error.message)
+      setLinkStatus('error')
+    } else {
+      setLinkStatus('sent')
+    }
   }
 
   const entrarNoGrupo = async () => {
@@ -149,6 +161,24 @@ export function JoinScreen({ slug }) {
           )}
         </div>
 
+        {abertoEmNavegadorEmbutido() && (
+          <div
+            style={{
+              maxWidth: '340px',
+              padding: '12px 14px',
+              borderRadius: '12px',
+              background: 'rgba(242,193,77,.08)',
+              border: '1px solid rgba(242,193,77,.25)',
+              font: '400 12.5px/1.4 Barlow, sans-serif',
+              color: 'rgba(234,243,236,.8)',
+              textAlign: 'center',
+            }}
+          >
+            Você abriu esse link dentro do WhatsApp (ou outro app). Se o e-mail já estiver logado em outro navegador,
+            toque em <strong>⋮ → Abrir no navegador</strong> antes de continuar — assim não perde a sessão.
+          </div>
+        )}
+
         {linkStatus === 'sent' ? (
           <div style={{ textAlign: 'center', font: '400 14px/1.5 Barlow, sans-serif', color: 'rgba(234,243,236,.75)' }}>
             Manda um link mágico pro seu e-mail. Abre o link em <strong>{email}</strong> para entrar no grupo.
@@ -191,9 +221,7 @@ export function JoinScreen({ slug }) {
               {linkStatus === 'sending' ? 'Enviando…' : 'Receber link mágico e entrar'}
             </button>
             {linkStatus === 'error' && (
-              <div style={{ font: '400 12.5px Barlow, sans-serif', color: '#F2843D' }}>
-                Não deu para enviar o link. Tenta de novo.
-              </div>
+              <div style={{ font: '400 12.5px Barlow, sans-serif', color: '#F2843D' }}>{erroLink}</div>
             )}
           </form>
         )}
