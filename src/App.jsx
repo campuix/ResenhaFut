@@ -5,6 +5,7 @@ import { useSorteio } from './hooks/useSorteio'
 import { useRateio } from './hooks/useRateio'
 import { useGrupo } from './hooks/useGrupo'
 import { useHistorico } from './hooks/useHistorico'
+import { useMeuPerfil } from './hooks/useMeuPerfil'
 import { supabase, supabaseConfigured } from './lib/supabase'
 import { Header } from './components/Header'
 import { TabBar } from './components/TabBar'
@@ -18,6 +19,7 @@ import { RateioScreen } from './screens/Rateio'
 import { GrupoScreen } from './screens/Grupo'
 import { HistoricoScreen } from './screens/Historico'
 import { CriarJogoScreen } from './screens/CriarJogo'
+import { PerfilScreen } from './screens/Perfil'
 import { mesAbrev } from './lib/format'
 
 const TAB_TITLES = {
@@ -44,10 +46,12 @@ function AppShell({ userId }) {
   } = useRateio(userId)
   const { loading: grupoLoading, error: grupoError, data: grupoData, setPapel, removerMembro } = useGrupo(userId)
   const { loading: histLoading, error: histError, data: histData } = useHistorico(userId)
+  const { loading: perfilLoading, error: perfilError, data: perfilData, salvarDados, sairDoGrupo } = useMeuPerfil(userId)
 
   const [sheet, setSheet] = useState(null)
   const [papelSel, setPapelSel] = useState(null)
   const [formJogo, setFormJogo] = useState(null)
+  const [perfilAberto, setPerfilAberto] = useState(false)
 
   const handleTogglePagamento = async (usuarioId, situacaoAtual) => {
     try {
@@ -135,6 +139,10 @@ function AppShell({ userId }) {
     } catch (err) {
       alert('Não deu para encerrar o jogo: ' + err.message)
     }
+  }
+
+  const handleSairDoGrupo = async () => {
+    await sairDoGrupo()
   }
 
   const papel = data?.papel
@@ -275,6 +283,7 @@ function AppShell({ userId }) {
         title={TAB_TITLES[tab]}
         papel={papel}
         onConvidar={() => setSheet('convite')}
+        onAbrirPerfil={() => setPerfilAberto(true)}
       />
       <div style={{ flex: 1, overflow: 'auto', padding: '0 20px 120px' }}>
         {tab === 'jogo' && jogoContent}
@@ -322,6 +331,16 @@ function AppShell({ userId }) {
           onCancelarJogo={handleCancelarJogoDestrutivo}
         />
       )}
+
+      {perfilAberto && perfilData && !perfilData.semGrupo && (
+        <PerfilScreen
+          perfilData={perfilData}
+          onSalvar={salvarDados}
+          onSairDoGrupo={handleSairDoGrupo}
+          onSairDaConta={() => supabase.auth.signOut()}
+          onFechar={() => setPerfilAberto(false)}
+        />
+      )}
     </div>
   )
 }
@@ -356,20 +375,6 @@ export default function App() {
     <div style={{ minHeight: '100dvh', background: '#08130E' }}>
       <div style={{ maxWidth: '480px', margin: '0 auto', minHeight: '100dvh', position: 'relative' }}>
         <AppShell userId={session.user.id} />
-        <div
-          onClick={() => supabase.auth.signOut()}
-          style={{
-            position: 'fixed',
-            top: '10px',
-            right: '10px',
-            zIndex: 50,
-            font: "500 9px/1 'IBM Plex Mono', monospace",
-            color: 'rgba(234,243,236,.4)',
-            cursor: 'pointer',
-          }}
-        >
-          sair
-        </div>
       </div>
     </div>
   )

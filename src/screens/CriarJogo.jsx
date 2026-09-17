@@ -1,42 +1,5 @@
 import { useState } from 'react'
-
-const FIELD_BOX = {
-  padding: '15px 16px',
-  borderRadius: '14px',
-  background: '#0F2117',
-  border: '1px solid rgba(234,243,236,.1)',
-}
-const LABEL_STYLE = {
-  font: '400 10.5px/1 Barlow, sans-serif',
-  color: 'rgba(234,243,236,.6)',
-}
-const VALUE_TEXT = {
-  border: 'none',
-  outline: 'none',
-  background: 'transparent',
-  color: '#EAF3EC',
-  width: '100%',
-  padding: 0,
-  marginTop: '7px',
-  font: '600 16px/1 Barlow, sans-serif',
-}
-const VALUE_NUMBER = {
-  ...VALUE_TEXT,
-  marginTop: '6px',
-  font: "700 20px/1 'Barlow Condensed', sans-serif",
-}
-const VALUE_MONO = {
-  ...VALUE_TEXT,
-  marginTop: '8px',
-  color: 'rgba(234,243,236,.85)',
-  font: "500 14px/1 'IBM Plex Mono', monospace",
-}
-const GROUP_TITLE = {
-  font: "500 10px/1 'IBM Plex Mono', monospace",
-  letterSpacing: '.14em',
-  color: 'rgba(234,243,236,.68)',
-  textTransform: 'uppercase',
-}
+import { FIELD_BOX, GROUP_TITLE, LABEL_STYLE, VALUE_MONO, VALUE_NUMBER, VALUE_TEXT } from '../lib/fieldStyles'
 
 const RECORRENCIA_OPCOES = [
   { id: 'unica', label: 'Só esta' },

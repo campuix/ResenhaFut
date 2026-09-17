@@ -1,4 +1,4 @@
-export function Header({ eyebrow, title, papel, onConvidar }) {
+export function Header({ eyebrow, title, papel, onConvidar, onAbrirPerfil }) {
   const isAdmin = papel === 'dono' || papel === 'admin'
   const chip = isAdmin
     ? { label: papel === 'dono' ? 'DONO' : 'ADMIN', bg: 'rgba(201,242,77,.16)', fg: '#C9F24D' }
@@ -38,9 +38,11 @@ export function Header({ eyebrow, title, papel, onConvidar }) {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <div
+          onClick={onAbrirPerfil}
           style={{
             padding: '9px 12px',
             borderRadius: '999px',
+            cursor: 'pointer',
             font: "500 10px/1 'IBM Plex Mono', monospace",
             letterSpacing: '.08em',
             background: chip.bg,
