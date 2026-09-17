@@ -6,6 +6,7 @@ import { useRateio } from './hooks/useRateio'
 import { useGrupo } from './hooks/useGrupo'
 import { useHistorico } from './hooks/useHistorico'
 import { useMeuPerfil } from './hooks/useMeuPerfil'
+import { usePerfilMembro } from './hooks/usePerfilMembro'
 import { supabase, supabaseConfigured } from './lib/supabase'
 import { Header } from './components/Header'
 import { TabBar } from './components/TabBar'
@@ -45,7 +46,14 @@ function AppShell({ userId }) {
     definirResponsavel,
     salvarMinhaChavePix,
   } = useRateio(userId)
-  const { loading: grupoLoading, error: grupoError, data: grupoData, setPapel, removerMembro } = useGrupo(userId)
+  const {
+    loading: grupoLoading,
+    error: grupoError,
+    data: grupoData,
+    setPapel,
+    removerMembro,
+    refetch: refetchGrupo,
+  } = useGrupo(userId)
   const { loading: histLoading, error: histError, data: histData } = useHistorico(userId)
   const { loading: perfilLoading, error: perfilError, data: perfilData, salvarDados, sairDoGrupo } = useMeuPerfil(userId)
 
@@ -54,6 +62,14 @@ function AppShell({ userId }) {
   const [formJogo, setFormJogo] = useState(null)
   const [perfilAberto, setPerfilAberto] = useState(false)
   const [acessosAberto, setAcessosAberto] = useState(false)
+  const [verPerfilMembro, setVerPerfilMembro] = useState(false)
+
+  const {
+    data: perfilMembroData,
+    definirNivel: definirNivelMembro,
+    tornarAdmin: tornarAdminMembro,
+    removerMembro: removerMembroDoPerfil,
+  } = usePerfilMembro(grupoData?.grupoId, verPerfilMembro ? papelSel?.usuarioId : null)
 
   const handleTogglePagamento = async (usuarioId, situacaoAtual) => {
     try {
@@ -89,6 +105,26 @@ function AppShell({ userId }) {
     } catch (err) {
       alert('Não deu para remover do grupo: ' + err.message)
     }
+  }
+
+  const handleVerPerfilMembro = () => {
+    setSheet(null)
+    setVerPerfilMembro(true)
+  }
+
+  const handleFecharPerfilMembro = () => {
+    setVerPerfilMembro(false)
+    setPapelSel(null)
+  }
+
+  const handleTornarAdminMembro = async () => {
+    await tornarAdminMembro()
+    await refetchGrupo()
+  }
+
+  const handleRemoverMembroDoPerfil = async () => {
+    await removerMembroDoPerfil()
+    await refetchGrupo()
   }
 
   const handleEscolherResponsavel = async (usuarioId) => {
@@ -312,6 +348,7 @@ function AppShell({ userId }) {
                   grupoData?.papel === 'dono' && !(papelSel.usuarioId === userId && papelSel.papelAtual === 'dono'),
                 onSetPapel: handleSetPapel,
                 onRemover: handleRemoverMembro,
+                onVerPerfil: handleVerPerfilMembro,
               }
             : null
         }
@@ -345,6 +382,17 @@ function AppShell({ userId }) {
           onSairDoGrupo={handleSairDoGrupo}
           onSairDaConta={() => supabase.auth.signOut()}
           onFechar={() => setPerfilAberto(false)}
+        />
+      )}
+
+      {verPerfilMembro && perfilMembroData && (
+        <PerfilScreen
+          perfilData={perfilMembroData}
+          modo="admin"
+          onDefinirNivel={definirNivelMembro}
+          onTornarAdmin={handleTornarAdminMembro}
+          onRemoverMembro={handleRemoverMembroDoPerfil}
+          onFechar={handleFecharPerfilMembro}
         />
       )}
 

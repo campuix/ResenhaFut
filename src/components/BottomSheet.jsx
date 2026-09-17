@@ -160,7 +160,7 @@ function CobrarSheet({ mensagem, onClose }) {
   )
 }
 
-function PapelSheet({ nome, papelAtual, podeMudarPapel, onSetPapel, onRemover, onClose }) {
+function PapelSheet({ nome, papelAtual, podeMudarPapel, onSetPapel, onRemover, onVerPerfil, onClose }) {
   const [confirmandoRemocao, setConfirmandoRemocao] = useState(false)
   const opcaoAtual = ROLE_OPTIONS.find((r) => r.id === papelAtual)
 
@@ -170,7 +170,10 @@ function PapelSheet({ nome, papelAtual, podeMudarPapel, onSetPapel, onRemover, o
       sub="Admin marca jogo, confirma pagamento e mexe no grupo. Só o dono promove outro admin."
       onClose={onClose}
     >
-      <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div onClick={onVerPerfil} style={{ marginTop: '14px', font: '600 13px/1 Barlow, sans-serif', color: '#C9F24D', cursor: 'pointer' }}>
+        Ver perfil completo →
+      </div>
+      <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {podeMudarPapel ? (
           ROLE_OPTIONS.map((r) => (
             <div
@@ -304,6 +307,7 @@ export function BottomSheet({ sheet, onClose, convite, cobrar, papel, responsave
         podeMudarPapel={papel.podeMudarPapel}
         onSetPapel={papel.onSetPapel}
         onRemover={papel.onRemover}
+        onVerPerfil={papel.onVerPerfil}
         onClose={onClose}
       />
     )
