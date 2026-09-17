@@ -25,7 +25,7 @@ export function useGrupo(userId) {
       const [membrosRes, grupoRes] = await Promise.all([
         supabase
           .from('membros_publicos')
-          .select('usuario_id, papel, nivel, posicao, entrou_em, faltas')
+          .select('usuario_id, papel, nivel, posicao, entrou_em, entrou_como_admin_em, faltas')
           .eq('grupo_id', membro.grupo_id)
           .order('entrou_em', { ascending: true }),
         supabase.from('grupos').select('convite_slug').eq('id', membro.grupo_id).single(),
@@ -61,9 +61,14 @@ export function useGrupo(userId) {
   const setPapel = useCallback(
     async (usuarioId, novoPapel) => {
       if (!state.data?.grupoId) return
+      const membroAtual = state.data.membros?.find((m) => m.usuario_id === usuarioId)
+      const payload = { papel: novoPapel }
+      if (novoPapel === 'admin' && membroAtual?.papel !== 'admin' && membroAtual?.papel !== 'dono') {
+        payload.entrou_como_admin_em = new Date().toISOString()
+      }
       const { error } = await supabase
         .from('membros')
-        .update({ papel: novoPapel })
+        .update(payload)
         .eq('grupo_id', state.data.grupoId)
         .eq('usuario_id', usuarioId)
       if (error) throw error

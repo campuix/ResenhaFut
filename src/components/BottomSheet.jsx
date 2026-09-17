@@ -160,8 +160,9 @@ function CobrarSheet({ mensagem, onClose }) {
   )
 }
 
-function PapelSheet({ nome, papelAtual, onSetPapel, onRemover, onClose }) {
+function PapelSheet({ nome, papelAtual, podeMudarPapel, onSetPapel, onRemover, onClose }) {
   const [confirmandoRemocao, setConfirmandoRemocao] = useState(false)
+  const opcaoAtual = ROLE_OPTIONS.find((r) => r.id === papelAtual)
 
   return (
     <SheetShell
@@ -170,27 +171,38 @@ function PapelSheet({ nome, papelAtual, onSetPapel, onRemover, onClose }) {
       onClose={onClose}
     >
       <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {ROLE_OPTIONS.map((r) => (
-          <div
-            key={r.id}
-            onClick={() => onSetPapel(r.id)}
-            style={{
-              padding: '15px 17px',
-              borderRadius: '14px',
-              cursor: 'pointer',
-              background: r.id === papelAtual ? 'rgba(201,242,77,.08)' : 'rgba(234,243,236,.05)',
-              border: `1px solid ${r.id === papelAtual ? 'rgba(201,242,77,.3)' : 'rgba(234,243,236,.12)'}`,
-            }}
-          >
-            <div style={{ font: '700 15px/1 Barlow, sans-serif', color: r.id === papelAtual ? '#C9F24D' : '#EAF3EC' }}>
-              {r.label}
+        {podeMudarPapel ? (
+          ROLE_OPTIONS.map((r) => (
+            <div
+              key={r.id}
+              onClick={() => onSetPapel(r.id)}
+              style={{
+                padding: '15px 17px',
+                borderRadius: '14px',
+                cursor: 'pointer',
+                background: r.id === papelAtual ? 'rgba(201,242,77,.08)' : 'rgba(234,243,236,.05)',
+                border: `1px solid ${r.id === papelAtual ? 'rgba(201,242,77,.3)' : 'rgba(234,243,236,.12)'}`,
+              }}
+            >
+              <div style={{ font: '700 15px/1 Barlow, sans-serif', color: r.id === papelAtual ? '#C9F24D' : '#EAF3EC' }}>
+                {r.label}
+              </div>
+              <div style={{ font: '400 12px/1.4 Barlow, sans-serif', color: 'rgba(234,243,236,.68)', marginTop: '5px' }}>
+                {r.desc}
+              </div>
             </div>
+          ))
+        ) : (
+          <div style={{ padding: '15px 17px', borderRadius: '14px', background: 'rgba(234,243,236,.05)', border: '1px solid rgba(234,243,236,.12)' }}>
+            <div style={{ font: '700 15px/1 Barlow, sans-serif', color: '#C9F24D' }}>{opcaoAtual?.label ?? papelAtual}</div>
             <div style={{ font: '400 12px/1.4 Barlow, sans-serif', color: 'rgba(234,243,236,.68)', marginTop: '5px' }}>
-              {r.desc}
+              {papelAtual === 'dono'
+                ? 'Pra deixar de ser dono, transfira o grupo pra outro admin primeiro.'
+                : 'Só o dono muda esse papel.'}
             </div>
           </div>
-        ))}
-        {confirmandoRemocao ? (
+        )}
+        {papelAtual !== 'dono' && (confirmandoRemocao ? (
           <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
             <div
               onClick={onRemover}
@@ -239,7 +251,7 @@ function PapelSheet({ nome, papelAtual, onSetPapel, onRemover, onClose }) {
           >
             Remover do grupo
           </div>
-        )}
+        ))}
       </div>
     </SheetShell>
   )
@@ -289,6 +301,7 @@ export function BottomSheet({ sheet, onClose, convite, cobrar, papel, responsave
       <PapelSheet
         nome={papel.nome}
         papelAtual={papel.papelAtual}
+        podeMudarPapel={papel.podeMudarPapel}
         onSetPapel={papel.onSetPapel}
         onRemover={papel.onRemover}
         onClose={onClose}

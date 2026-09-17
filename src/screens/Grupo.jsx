@@ -1,6 +1,6 @@
 import { AVATAR_COLORS, iniciais, mesAnoCurto, nivelFmt } from '../lib/format'
 
-export function GrupoScreen({ userId, grupoData, onAbrirPapel, onConvidar }) {
+export function GrupoScreen({ userId, grupoData, onAbrirPapel, onConvidar, onAbrirAcessos }) {
   const { papel, membros } = grupoData
   const isAdmin = papel === 'dono' || papel === 'admin'
   const admins = membros.filter((m) => m.papel === 'dono' || m.papel === 'admin').length
@@ -107,6 +107,20 @@ export function GrupoScreen({ userId, grupoData, onAbrirPapel, onConvidar }) {
           }}
         >
           Convidar por link
+        </div>
+      )}
+
+      {isAdmin && (
+        <div
+          onClick={onAbrirAcessos}
+          style={{
+            textAlign: 'center',
+            font: '600 13px/1 Barlow, sans-serif',
+            color: 'rgba(234,243,236,.6)',
+            cursor: 'pointer',
+          }}
+        >
+          Ver acessos
         </div>
       )}
     </div>

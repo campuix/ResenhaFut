@@ -20,6 +20,7 @@ import { GrupoScreen } from './screens/Grupo'
 import { HistoricoScreen } from './screens/Historico'
 import { CriarJogoScreen } from './screens/CriarJogo'
 import { PerfilScreen } from './screens/Perfil'
+import { AcessosScreen } from './screens/Acessos'
 import { mesAbrev } from './lib/format'
 
 const TAB_TITLES = {
@@ -52,6 +53,7 @@ function AppShell({ userId }) {
   const [papelSel, setPapelSel] = useState(null)
   const [formJogo, setFormJogo] = useState(null)
   const [perfilAberto, setPerfilAberto] = useState(false)
+  const [acessosAberto, setAcessosAberto] = useState(false)
 
   const handleTogglePagamento = async (usuarioId, situacaoAtual) => {
     try {
@@ -235,6 +237,7 @@ function AppShell({ userId }) {
         grupoData={grupoData}
         onAbrirPapel={handleAbrirPapel}
         onConvidar={() => setSheet('convite')}
+        onAbrirAcessos={() => setAcessosAberto(true)}
       />
     )
   }
@@ -304,6 +307,8 @@ function AppShell({ userId }) {
             ? {
                 nome: papelSel.nome,
                 papelAtual: papelSel.papelAtual,
+                podeMudarPapel:
+                  grupoData?.papel === 'dono' && !(papelSel.usuarioId === userId && papelSel.papelAtual === 'dono'),
                 onSetPapel: handleSetPapel,
                 onRemover: handleRemoverMembro,
               }
@@ -339,6 +344,18 @@ function AppShell({ userId }) {
           onSairDoGrupo={handleSairDoGrupo}
           onSairDaConta={() => supabase.auth.signOut()}
           onFechar={() => setPerfilAberto(false)}
+        />
+      )}
+
+      {acessosAberto && grupoData && !grupoData.semGrupo && (
+        <AcessosScreen
+          userId={userId}
+          grupoData={grupoData}
+          onAbrirPapel={(sel) => {
+            setAcessosAberto(false)
+            handleAbrirPapel(sel)
+          }}
+          onFechar={() => setAcessosAberto(false)}
         />
       )}
     </div>
