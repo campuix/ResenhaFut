@@ -124,12 +124,54 @@ export function useProximoJogo(userId) {
     [userId, state.data, load]
   )
 
-  const encerrarJogo = useCallback(async () => {
+  const editarJogo = useCallback(
+    async (payload) => {
+      if (!state.data?.jogo) return
+      const { error } = await supabase.from('jogos').update(payload).eq('id', state.data.jogo.id)
+      if (error) throw error
+      await load()
+    },
+    [state.data, load]
+  )
+
+  const cancelarJogo = useCallback(async () => {
     if (!state.data?.jogo) return
-    const { error } = await supabase.from('jogos').update({ status: 'encerrado' }).eq('id', state.data.jogo.id)
+    const { error } = await supabase.from('jogos').update({ status: 'cancelado' }).eq('id', state.data.jogo.id)
     if (error) throw error
     await load()
   }, [state.data, load])
 
-  return { ...state, refetch: load, toggleMinhaPresenca, criarJogo, encerrarJogo }
+  const encerrarJogo = useCallback(async () => {
+    if (!userId || !state.data?.jogo) return
+    const { jogo, grupoId } = state.data
+    const { error } = await supabase.from('jogos').update({ status: 'encerrado' }).eq('id', jogo.id)
+    if (error) throw error
+
+    if (jogo.recorrencia === 'mensal' || jogo.recorrencia === 'semanal') {
+      const proximoInicio = new Date(jogo.inicio)
+      if (jogo.recorrencia === 'mensal') proximoInicio.setMonth(proximoInicio.getMonth() + 1)
+      else proximoInicio.setDate(proximoInicio.getDate() + 7)
+
+      const { error: proximoErr } = await supabase.from('jogos').insert({
+        grupo_id: grupoId,
+        criado_por: userId,
+        inicio: proximoInicio.toISOString(),
+        duracao_min: jogo.duracao_min,
+        recorrencia: jogo.recorrencia,
+        local: jogo.local,
+        quadra: jogo.quadra,
+        tipo: jogo.tipo,
+        vagas: jogo.vagas,
+        custo_total: jogo.custo_total,
+        chave_pix: jogo.chave_pix,
+      })
+      if (proximoErr) {
+        console.warn('Não foi possível criar o próximo jogo recorrente automaticamente:', proximoErr.message)
+      }
+    }
+
+    await load()
+  }, [userId, state.data, load])
+
+  return { ...state, refetch: load, toggleMinhaPresenca, criarJogo, editarJogo, cancelarJogo, encerrarJogo }
 }

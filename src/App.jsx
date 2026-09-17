@@ -30,7 +30,8 @@ const TAB_TITLES = {
 
 function AppShell({ userId }) {
   const [tab, setTab] = useState('jogo')
-  const { loading, error, data, toggleMinhaPresenca, criarJogo, encerrarJogo } = useProximoJogo(userId)
+  const { loading, error, data, toggleMinhaPresenca, criarJogo, editarJogo, cancelarJogo, encerrarJogo } =
+    useProximoJogo(userId)
   const [toggling, setToggling] = useState(false)
   const { loading: sorteioLoading, error: sorteioError, data: sorteioData, sortear } = useSorteio(userId)
   const {
@@ -46,6 +47,7 @@ function AppShell({ userId }) {
 
   const [sheet, setSheet] = useState(null)
   const [papelSel, setPapelSel] = useState(null)
+  const [formJogo, setFormJogo] = useState(null)
 
   const handleTogglePagamento = async (usuarioId, situacaoAtual) => {
     try {
@@ -112,8 +114,19 @@ function AppShell({ userId }) {
     }
   }
 
-  const handleCriarJogo = async (payload) => {
-    await criarJogo(payload)
+  const handleSalvarJogo = async (payload, { avisarGrupo }) => {
+    if (formJogo === 'editar') {
+      await editarJogo(payload)
+    } else {
+      await criarJogo(payload)
+      if (avisarGrupo) setSheet('convite')
+    }
+    setFormJogo(null)
+  }
+
+  const handleCancelarJogoDestrutivo = async () => {
+    await cancelarJogo()
+    setFormJogo(null)
   }
 
   const handleEncerrarJogo = async () => {
@@ -137,7 +150,18 @@ function AppShell({ userId }) {
   } else if (data?.semJogo) {
     jogoContent =
       data.papel === 'dono' || data.papel === 'admin' ? (
-        <CriarJogoScreen onCriar={handleCriarJogo} />
+        <div style={{ borderRadius: '20px', padding: '44px 24px', background: '#0F2117', border: '1px dashed rgba(201,242,77,.25)', textAlign: 'center' }}>
+          <div style={{ font: "800 22px/1.2 'Barlow Condensed', sans-serif" }}>Nenhum jogo marcado</div>
+          <div style={{ font: '400 13.5px/1.45 Barlow, sans-serif', color: 'rgba(234,243,236,.7)', marginTop: '8px' }}>
+            Marca a próxima pelada pra galera começar a confirmar presença.
+          </div>
+          <div
+            onClick={() => setFormJogo('criar')}
+            style={{ marginTop: '22px', display: 'inline-block', padding: '15px 26px', borderRadius: '14px', background: '#C9F24D', color: '#08130E', font: '700 16px/1 Barlow, sans-serif', cursor: 'pointer' }}
+          >
+            Marcar jogo
+          </div>
+        </div>
       ) : (
         <CenterMessage>Nenhum jogo marcado no momento.</CenterMessage>
       )
@@ -149,6 +173,7 @@ function AppShell({ userId }) {
         onToggle={handleToggle}
         toggling={toggling}
         onEncerrar={handleEncerrarJogo}
+        onEditar={() => setFormJogo('editar')}
       />
     )
   }
@@ -284,6 +309,19 @@ function AppShell({ userId }) {
           onEscolher: handleEscolherResponsavel,
         }}
       />
+
+      {formJogo && (
+        <CriarJogoScreen
+          mode={formJogo}
+          jogoExistente={formJogo === 'editar' ? data?.jogo : null}
+          vagasConfirmadas={
+            formJogo === 'editar' ? data?.presencas?.filter((p) => p.situacao === 'confirmado').length : null
+          }
+          onSalvar={handleSalvarJogo}
+          onFechar={() => setFormJogo(null)}
+          onCancelarJogo={handleCancelarJogoDestrutivo}
+        />
+      )}
     </div>
   )
 }

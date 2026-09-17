@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AVATAR_COLORS, diaSemanaMaiusculo, faixaHorario, iniciais, mesAbrev, nivelFmt } from '../lib/format'
 
-export function ProximoJogoScreen({ userId, jogoData, onToggle, toggling, onEncerrar }) {
+export function ProximoJogoScreen({ userId, jogoData, onToggle, toggling, onEncerrar, onEditar }) {
   const [showAll, setShowAll] = useState(false)
   const [confirmandoEncerrar, setConfirmandoEncerrar] = useState(false)
   const { jogo, presencas, membrosPub, pagamentos, papel } = jogoData
@@ -305,11 +305,19 @@ export function ProximoJogoScreen({ userId, jogoData, onToggle, toggling, onEnce
               </span>
             </div>
           ) : (
-            <span
-              onClick={() => setConfirmandoEncerrar(true)}
-              style={{ font: '500 11.5px/1 Barlow, sans-serif', color: 'rgba(234,243,236,.4)', cursor: 'pointer' }}
-            >
-              encerrar esse jogo
+            <span style={{ display: 'flex', gap: '14px', justifyContent: 'center' }}>
+              <span
+                onClick={onEditar}
+                style={{ font: '500 11.5px/1 Barlow, sans-serif', color: 'rgba(234,243,236,.4)', cursor: 'pointer' }}
+              >
+                editar jogo
+              </span>
+              <span
+                onClick={() => setConfirmandoEncerrar(true)}
+                style={{ font: '500 11.5px/1 Barlow, sans-serif', color: 'rgba(234,243,236,.4)', cursor: 'pointer' }}
+              >
+                encerrar esse jogo
+              </span>
             </span>
           )}
         </div>
