@@ -52,7 +52,7 @@ export function NomeCompletoScreen({ userId, onEntrar }) {
           Resenha Fut
         </div>
         <div style={{ font: "800 26px/1.2 'Barlow Condensed', sans-serif", marginTop: '8px' }}>
-          Como te chamam na pelada?
+          Como te chamam no fut?
         </div>
       </div>
 
