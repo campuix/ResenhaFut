@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { waLink } from '../lib/share'
+import { Sheet } from './Sheet'
 
 const ROLE_OPTIONS = [
   { id: 'dono', label: 'Dono do grupo', desc: 'Tudo: cria e apaga o grupo, promove admins, encerra a pelada.' },
@@ -10,52 +11,11 @@ const ROLE_OPTIONS = [
 const COPY = {
   convite: ['Chamar a resenha', 'Manda o link no grupo. Quem confirmar entra na lista; cheio, vai pra espera.'],
   cobrar: ['Cobrar no grupo', 'A mensagem já vai com o valor e quantos ainda estão devendo.'],
+  responsavel: ['Responsável pelo Pix', 'Quem administra o rateio desta partida. Só essa pessoa consegue cadastrar a própria chave.'],
+  papel: 'Admin marca jogo, confirma pagamento e mexe no grupo. Só o dono promove outro admin.',
 }
 
-function SheetShell({ title, sub, onClose, children }) {
-  return (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        zIndex: 70,
-        background: 'rgba(4,10,7,.6)',
-        display: 'flex',
-        alignItems: 'flex-end',
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: '100%',
-          borderRadius: '28px 28px 0 0',
-          background: '#10231A',
-          borderTop: '1px solid rgba(201,242,77,.2)',
-          padding: '26px 22px 44px',
-          animation: 'rf-in .28s ease both',
-        }}
-      >
-        <div
-          style={{
-            width: '40px',
-            height: '4px',
-            borderRadius: '99px',
-            background: 'rgba(234,243,236,.2)',
-            margin: '0 auto 20px',
-          }}
-        />
-        <div style={{ font: "800 25px/1.1 'Barlow Condensed', sans-serif", letterSpacing: '-.01em' }}>{title}</div>
-        <div style={{ font: '400 13.5px/1.45 Barlow, sans-serif', color: 'rgba(234,243,236,.7)', marginTop: '7px' }}>
-          {sub}
-        </div>
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function ConviteSheet({ link, onClose }) {
+function ConviteBody({ link }) {
   const [copiado, setCopiado] = useState(false)
 
   const copiar = async () => {
@@ -69,111 +29,103 @@ function ConviteSheet({ link, onClose }) {
   }
 
   return (
-    <SheetShell title={COPY.convite[0]} sub={COPY.convite[1]} onClose={onClose}>
-      <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '11px' }}>
-        <div
-          style={{
-            padding: '15px 17px',
-            borderRadius: '14px',
-            background: '#08130E',
-            border: '1px solid rgba(234,243,236,.1)',
-            font: "400 13px/1 'IBM Plex Mono', monospace",
-            color: 'rgba(234,243,236,.65)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {link}
-        </div>
-        <a
-          href={waLink(`Chamada pra resenha! Confirma sua presença: ${link}`)}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            padding: '16px',
-            borderRadius: '14px',
-            textAlign: 'center',
-            background: '#C9F24D',
-            color: '#08130E',
-            font: '700 16px/1 Barlow, sans-serif',
-            display: 'block',
-            textDecoration: 'none',
-          }}
-        >
-          Compartilhar no WhatsApp
-        </a>
-        <div
-          onClick={copiar}
-          style={{
-            padding: '16px',
-            borderRadius: '14px',
-            textAlign: 'center',
-            border: '1px solid rgba(234,243,236,.14)',
-            color: 'rgba(234,243,236,.75)',
-            font: '600 15px/1 Barlow, sans-serif',
-            cursor: 'pointer',
-          }}
-        >
-          {copiado ? 'Link copiado!' : 'Copiar link'}
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '11px' }}>
+      <div
+        style={{
+          padding: '15px 17px',
+          borderRadius: '14px',
+          background: '#08130E',
+          border: '1px solid rgba(234,243,236,.1)',
+          font: "400 13px/1 'IBM Plex Mono', monospace",
+          color: 'rgba(234,243,236,.65)',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {link}
       </div>
-    </SheetShell>
+      <a
+        href={waLink(`Chamada pra resenha! Confirma sua presença: ${link}`)}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          padding: '16px',
+          borderRadius: '14px',
+          textAlign: 'center',
+          background: '#C9F24D',
+          color: '#08130E',
+          font: '700 16px/1 Barlow, sans-serif',
+          display: 'block',
+          textDecoration: 'none',
+        }}
+      >
+        Compartilhar no WhatsApp
+      </a>
+      <div
+        onClick={copiar}
+        style={{
+          padding: '16px',
+          borderRadius: '14px',
+          textAlign: 'center',
+          border: '1px solid rgba(234,243,236,.14)',
+          color: 'rgba(234,243,236,.75)',
+          font: '600 15px/1 Barlow, sans-serif',
+          cursor: 'pointer',
+        }}
+      >
+        {copiado ? 'Link copiado!' : 'Copiar link'}
+      </div>
+    </div>
   )
 }
 
-function CobrarSheet({ mensagem, onClose }) {
+function CobrarBody({ mensagem }) {
   return (
-    <SheetShell title={COPY.cobrar[0]} sub={COPY.cobrar[1]} onClose={onClose}>
-      <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '11px' }}>
-        <div
-          style={{
-            padding: '16px 18px',
-            borderRadius: '14px',
-            background: '#08130E',
-            border: '1px solid rgba(234,243,236,.1)',
-            font: '400 14px/1.5 Barlow, sans-serif',
-            color: 'rgba(234,243,236,.7)',
-          }}
-        >
-          {mensagem}
-        </div>
-        <a
-          href={waLink(mensagem)}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            padding: '16px',
-            borderRadius: '14px',
-            textAlign: 'center',
-            background: '#C9F24D',
-            color: '#08130E',
-            font: '700 16px/1 Barlow, sans-serif',
-            display: 'block',
-            textDecoration: 'none',
-          }}
-        >
-          Enviar no grupo
-        </a>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '11px' }}>
+      <div
+        style={{
+          padding: '16px 18px',
+          borderRadius: '14px',
+          background: '#08130E',
+          border: '1px solid rgba(234,243,236,.1)',
+          font: '400 14px/1.5 Barlow, sans-serif',
+          color: 'rgba(234,243,236,.7)',
+        }}
+      >
+        {mensagem}
       </div>
-    </SheetShell>
+      <a
+        href={waLink(mensagem)}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          padding: '16px',
+          borderRadius: '14px',
+          textAlign: 'center',
+          background: '#C9F24D',
+          color: '#08130E',
+          font: '700 16px/1 Barlow, sans-serif',
+          display: 'block',
+          textDecoration: 'none',
+        }}
+      >
+        Enviar no grupo
+      </a>
+    </div>
   )
 }
 
-function PapelSheet({ nome, papelAtual, podeMudarPapel, onSetPapel, onRemover, onVerPerfil, onClose }) {
+function PapelBody({ papelAtual, podeMudarPapel, onSetPapel, onRemover, onVerPerfil }) {
   const [confirmandoRemocao, setConfirmandoRemocao] = useState(false)
   const opcaoAtual = ROLE_OPTIONS.find((r) => r.id === papelAtual)
 
   return (
-    <SheetShell
-      title={`Papel de ${nome}`}
-      sub="Admin marca jogo, confirma pagamento e mexe no grupo. Só o dono promove outro admin."
-      onClose={onClose}
-    >
-      <div onClick={onVerPerfil} style={{ marginTop: '14px', font: '600 13px/1 Barlow, sans-serif', color: '#C9F24D', cursor: 'pointer' }}>
+    <>
+      <div onClick={onVerPerfil} style={{ marginBottom: '14px', font: '600 13px/1 Barlow, sans-serif', color: '#C9F24D', cursor: 'pointer' }}>
         Ver perfil completo →
       </div>
-      <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {podeMudarPapel ? (
           ROLE_OPTIONS.map((r) => (
             <div
@@ -256,71 +208,84 @@ function PapelSheet({ nome, papelAtual, podeMudarPapel, onSetPapel, onRemover, o
           </div>
         ))}
       </div>
-    </SheetShell>
+    </>
   )
 }
 
-function ResponsavelSheet({ membros, responsavelId, onEscolher, onClose }) {
+function ResponsavelBody({ membros, responsavelId, onEscolher }) {
   return (
-    <SheetShell
-      title="Responsável pelo Pix"
-      sub="Quem administra o rateio desta partida. Só essa pessoa consegue cadastrar a própria chave."
-      onClose={onClose}
-    >
-      <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {membros.map((m) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      {membros.map((m) => (
+        <div
+          key={m.usuario_id}
+          onClick={() => onEscolher(m.usuario_id)}
+          style={{
+            padding: '15px 17px',
+            borderRadius: '14px',
+            cursor: 'pointer',
+            background: m.usuario_id === responsavelId ? 'rgba(201,242,77,.08)' : 'rgba(234,243,236,.05)',
+            border: `1px solid ${m.usuario_id === responsavelId ? 'rgba(201,242,77,.3)' : 'rgba(234,243,236,.12)'}`,
+          }}
+        >
           <div
-            key={m.usuario_id}
-            onClick={() => onEscolher(m.usuario_id)}
             style={{
-              padding: '15px 17px',
-              borderRadius: '14px',
-              cursor: 'pointer',
-              background: m.usuario_id === responsavelId ? 'rgba(201,242,77,.08)' : 'rgba(234,243,236,.05)',
-              border: `1px solid ${m.usuario_id === responsavelId ? 'rgba(201,242,77,.3)' : 'rgba(234,243,236,.12)'}`,
+              font: '700 15px/1 Barlow, sans-serif',
+              color: m.usuario_id === responsavelId ? '#C9F24D' : '#EAF3EC',
             }}
           >
-            <div
-              style={{
-                font: '700 15px/1 Barlow, sans-serif',
-                color: m.usuario_id === responsavelId ? '#C9F24D' : '#EAF3EC',
-              }}
-            >
-              {m.nome}
-            </div>
+            {m.nome}
           </div>
-        ))}
-      </div>
-    </SheetShell>
+        </div>
+      ))}
+    </div>
   )
 }
 
 export function BottomSheet({ sheet, onClose, convite, cobrar, papel, responsavel }) {
-  if (!sheet) return null
-  if (sheet === 'convite') return <ConviteSheet link={convite.link} onClose={onClose} />
-  if (sheet === 'cobrar') return <CobrarSheet mensagem={cobrar.mensagem} onClose={onClose} />
-  if (sheet === 'papel') {
-    return (
-      <PapelSheet
-        nome={papel.nome}
-        papelAtual={papel.papelAtual}
-        podeMudarPapel={papel.podeMudarPapel}
-        onSetPapel={papel.onSetPapel}
-        onRemover={papel.onRemover}
-        onVerPerfil={papel.onVerPerfil}
-        onClose={onClose}
+  const [rendered, setRendered] = useState(sheet ? { sheet, convite, cobrar, papel, responsavel } : null)
+
+  useEffect(() => {
+    if (sheet) setRendered({ sheet, convite, cobrar, papel, responsavel })
+  }, [sheet, convite, cobrar, papel, responsavel])
+
+  if (!rendered) return null
+
+  let title = ''
+  let sub = ''
+  let content = null
+
+  if (rendered.sheet === 'convite') {
+    ;[title, sub] = COPY.convite
+    content = <ConviteBody link={rendered.convite.link} />
+  } else if (rendered.sheet === 'cobrar') {
+    ;[title, sub] = COPY.cobrar
+    content = <CobrarBody mensagem={rendered.cobrar.mensagem} />
+  } else if (rendered.sheet === 'papel') {
+    title = `Papel de ${rendered.papel.nome}`
+    sub = COPY.papel
+    content = (
+      <PapelBody
+        papelAtual={rendered.papel.papelAtual}
+        podeMudarPapel={rendered.papel.podeMudarPapel}
+        onSetPapel={rendered.papel.onSetPapel}
+        onRemover={rendered.papel.onRemover}
+        onVerPerfil={rendered.papel.onVerPerfil}
+      />
+    )
+  } else if (rendered.sheet === 'responsavel') {
+    ;[title, sub] = COPY.responsavel
+    content = (
+      <ResponsavelBody
+        membros={rendered.responsavel.membros}
+        responsavelId={rendered.responsavel.responsavelId}
+        onEscolher={rendered.responsavel.onEscolher}
       />
     )
   }
-  if (sheet === 'responsavel') {
-    return (
-      <ResponsavelSheet
-        membros={responsavel.membros}
-        responsavelId={responsavel.responsavelId}
-        onEscolher={responsavel.onEscolher}
-        onClose={onClose}
-      />
-    )
-  }
-  return null
+
+  return (
+    <Sheet open={Boolean(sheet)} onClose={onClose} title={title} sub={sub} onExited={() => setRendered(null)}>
+      {content}
+    </Sheet>
+  )
 }
