@@ -129,6 +129,12 @@ function AppShell({ userId, userEmail }) {
     }
   }
 
+  const handleSalvarNomeMembro = async (novoNome) => {
+    const { error } = await supabase.from('profiles').update({ nome: novoNome }).eq('id', papelSel.usuarioId)
+    if (error) throw error
+    await refetchGrupo()
+  }
+
   const handleVerPerfilMembro = () => {
     setSheet(null)
     setVerPerfilMembro(true)
@@ -383,9 +389,11 @@ function AppShell({ userId, userEmail }) {
                 papelAtual: papelSel.papelAtual,
                 podeMudarPapel:
                   grupoData?.papel === 'dono' && !(papelSel.usuarioId === userId && papelSel.papelAtual === 'dono'),
+                souAdmin: grupoData?.papel === 'dono' || grupoData?.papel === 'admin',
                 onSetPapel: handleSetPapel,
                 onRemover: handleRemoverMembro,
                 onVerPerfil: handleVerPerfilMembro,
+                onSalvarNome: handleSalvarNomeMembro,
               }
             : null
         }

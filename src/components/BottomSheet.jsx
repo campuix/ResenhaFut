@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { waLink } from '../lib/share'
 import { Sheet } from './Sheet'
+import { FIELD_BOX, LABEL_STYLE, VALUE_TEXT } from '../lib/fieldStyles'
 
 const ROLE_OPTIONS = [
   { id: 'dono', label: 'Dono do grupo', desc: 'Tudo: cria e apaga o grupo, promove admins, encerra a pelada.' },
@@ -116,7 +117,55 @@ function CobrarBody({ mensagem }) {
   )
 }
 
-function PapelBody({ papelAtual, podeMudarPapel, onSetPapel, onRemover, onVerPerfil }) {
+function NomeMembroField({ nomeAtual, onSalvarNome }) {
+  const [nome, setNome] = useState(nomeAtual)
+  const [salvando, setSalvando] = useState(false)
+  const [salvo, setSalvo] = useState(false)
+  const [erro, setErro] = useState('')
+
+  const salvar = async () => {
+    if (!nome.trim() || salvando) return
+    setSalvando(true)
+    setErro('')
+    setSalvo(false)
+    try {
+      await onSalvarNome(nome.trim())
+      setSalvo(true)
+      setTimeout(() => setSalvo(false), 2000)
+    } catch (err) {
+      setErro(err.message)
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  return (
+    <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={FIELD_BOX}>
+        <div style={LABEL_STYLE}>Nome</div>
+        <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} style={VALUE_TEXT} />
+      </div>
+      <div
+        onClick={salvar}
+        style={{
+          alignSelf: 'flex-start',
+          padding: '10px 16px',
+          borderRadius: '12px',
+          background: '#C9F24D',
+          color: '#08130E',
+          font: '700 13px/1 Barlow, sans-serif',
+          cursor: salvando ? 'default' : 'pointer',
+          opacity: salvando ? 0.7 : 1,
+        }}
+      >
+        {salvando ? 'Salvando…' : salvo ? 'Salvo!' : 'Salvar nome'}
+      </div>
+      {erro && <div style={{ font: '400 12px/1.4 Barlow, sans-serif', color: '#F2843D' }}>{erro}</div>}
+    </div>
+  )
+}
+
+function PapelBody({ papelAtual, podeMudarPapel, souAdmin, nomeAtual, onSetPapel, onRemover, onVerPerfil, onSalvarNome }) {
   const [confirmandoRemocao, setConfirmandoRemocao] = useState(false)
   const opcaoAtual = ROLE_OPTIONS.find((r) => r.id === papelAtual)
 
@@ -125,6 +174,7 @@ function PapelBody({ papelAtual, podeMudarPapel, onSetPapel, onRemover, onVerPer
       <div onClick={onVerPerfil} style={{ marginBottom: '14px', font: '600 13px/1 Barlow, sans-serif', color: '#C9F24D', cursor: 'pointer' }}>
         Ver perfil completo →
       </div>
+      {souAdmin && <NomeMembroField nomeAtual={nomeAtual} onSalvarNome={onSalvarNome} />}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {podeMudarPapel ? (
           ROLE_OPTIONS.map((r) => (
@@ -267,9 +317,12 @@ export function BottomSheet({ sheet, onClose, convite, cobrar, papel, responsave
       <PapelBody
         papelAtual={rendered.papel.papelAtual}
         podeMudarPapel={rendered.papel.podeMudarPapel}
+        souAdmin={rendered.papel.souAdmin}
+        nomeAtual={rendered.papel.nome}
         onSetPapel={rendered.papel.onSetPapel}
         onRemover={rendered.papel.onRemover}
         onVerPerfil={rendered.papel.onVerPerfil}
+        onSalvarNome={rendered.papel.onSalvarNome}
       />
     )
   } else if (rendered.sheet === 'responsavel') {
