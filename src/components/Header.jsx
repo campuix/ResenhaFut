@@ -1,4 +1,4 @@
-export function Header({ eyebrow, title, papel, onConvidar, onAbrirPerfil, onSairDaConta }) {
+export function Header({ eyebrow, title, papel, onConvidar, onAbrirPerfil }) {
   const isAdmin = papel === 'dono' || papel === 'admin'
   const chip = isAdmin
     ? { label: papel === 'dono' ? 'DONO' : 'ADMIN', bg: 'rgba(201,242,77,.16)', fg: '#C9F24D' }
@@ -36,51 +36,33 @@ export function Header({ eyebrow, title, papel, onConvidar, onAbrirPerfil, onSai
           {title}
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-        {onSairDaConta && (
-          <div
-            onClick={onSairDaConta}
-            style={{
-              minHeight: '44px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              font: '500 11.5px/1 Barlow, sans-serif',
-              color: 'rgba(234,243,236,.6)',
-              cursor: 'pointer',
-            }}
-          >
-            Sair da conta
-          </div>
-        )}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div
-            onClick={onAbrirPerfil}
-            style={{
-              padding: '9px 12px',
-              borderRadius: '999px',
-              cursor: 'pointer',
-              font: "500 10px/1 'IBM Plex Mono', monospace",
-              letterSpacing: '.08em',
-              background: chip.bg,
-              color: chip.fg,
-            }}
-          >
-            {chip.label}
-          </div>
-          <div
-            onClick={onConvidar}
-            style={{
-              padding: '9px 13px',
-              borderRadius: '999px',
-              border: '1px solid rgba(201,242,77,.28)',
-              color: '#C9F24D',
-              font: "600 12px/1 Barlow, sans-serif",
-              cursor: 'pointer',
-            }}
-          >
-            Convidar
-          </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div
+          onClick={onAbrirPerfil}
+          style={{
+            padding: '9px 12px',
+            borderRadius: '999px',
+            cursor: 'pointer',
+            font: "500 10px/1 'IBM Plex Mono', monospace",
+            letterSpacing: '.08em',
+            background: chip.bg,
+            color: chip.fg,
+          }}
+        >
+          {chip.label}
+        </div>
+        <div
+          onClick={onConvidar}
+          style={{
+            padding: '9px 13px',
+            borderRadius: '999px',
+            border: '1px solid rgba(201,242,77,.28)',
+            color: '#C9F24D',
+            font: "600 12px/1 Barlow, sans-serif",
+            cursor: 'pointer',
+          }}
+        >
+          Convidar
         </div>
       </div>
     </div>

@@ -20,6 +20,7 @@ import { SorteioScreen } from './screens/Sorteio'
 import { RateioScreen } from './screens/Rateio'
 import { GrupoScreen } from './screens/Grupo'
 import { HistoricoScreen } from './screens/Historico'
+import { MeusDadosScreen } from './screens/MeusDados'
 import { CriarJogoScreen } from './screens/CriarJogo'
 import { PerfilScreen } from './screens/Perfil'
 import { AcessosScreen } from './screens/Acessos'
@@ -62,6 +63,7 @@ function AppShell({ userId, userEmail }) {
   const [papelSel, setPapelSel] = useState(null)
   const [formJogo, setFormJogo] = useState(null)
   const [perfilAberto, setPerfilAberto] = useState(false)
+  const [meusDadosAberto, setMeusDadosAberto] = useState(false)
   const [acessosAberto, setAcessosAberto] = useState(false)
   const [verPerfilMembro, setVerPerfilMembro] = useState(false)
 
@@ -184,8 +186,8 @@ function AppShell({ userId, userEmail }) {
     await sairDoGrupo()
   }
 
-  const handleSalvarDadosPessoais = async ({ nome, telefone, chavePix, novoEmail }) => {
-    await salvarDados({ nome, telefone, chavePix, posicao: perfilData?.posicao ?? null })
+  const handleSalvarDadosPessoais = async ({ nome, telefone, chavePix, posicao, novoEmail }) => {
+    await salvarDados({ nome, telefone, chavePix, posicao })
     if (novoEmail) {
       const { error } = await supabase.auth.updateUser({ email: novoEmail })
       if (error) throw error
@@ -300,8 +302,7 @@ function AppShell({ userId, userEmail }) {
       <HistoricoScreen
         historicoData={histData}
         perfilData={perfilData}
-        email={userEmail}
-        onSalvarDadosPessoais={handleSalvarDadosPessoais}
+        onAbrirMeusDados={() => setMeusDadosAberto(true)}
         onSairDaConta={() => supabase.auth.signOut()}
       />
     )
@@ -341,7 +342,6 @@ function AppShell({ userId, userEmail }) {
         papel={papel}
         onConvidar={() => setSheet('convite')}
         onAbrirPerfil={() => setPerfilAberto(true)}
-        onSairDaConta={tab === 'jogo' ? () => supabase.auth.signOut() : undefined}
       />
       <div style={{ flex: 1, overflow: 'auto', padding: '0 20px 120px' }}>
         {tab === 'jogo' && jogoContent}
@@ -400,6 +400,15 @@ function AppShell({ userId, userEmail }) {
           onSairDoGrupo={handleSairDoGrupo}
           onSairDaConta={() => supabase.auth.signOut()}
           onFechar={() => setPerfilAberto(false)}
+        />
+      )}
+
+      {meusDadosAberto && perfilData && !perfilData.semGrupo && (
+        <MeusDadosScreen
+          perfilData={perfilData}
+          email={userEmail}
+          onSalvar={handleSalvarDadosPessoais}
+          onFechar={() => setMeusDadosAberto(false)}
         />
       )}
 

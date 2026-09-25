@@ -1,104 +1,113 @@
-import { useState } from 'react'
-import { mesAbrev } from '../lib/format'
-import { FIELD_BOX, GROUP_TITLE, LABEL_STYLE, VALUE_MONO, VALUE_TEXT } from '../lib/fieldStyles'
+import { iniciais, mesAbrev, mesAnoCurto } from '../lib/format'
 
-function DadosPessoais({ perfilData, email, onSalvar }) {
-  const [nome, setNome] = useState(perfilData?.nome ?? '')
-  const [telefone, setTelefone] = useState(perfilData?.telefone ?? '')
-  const [chavePix, setChavePix] = useState(perfilData?.chavePix ?? '')
-  const [novoEmail, setNovoEmail] = useState(email ?? '')
-  const [salvando, setSalvando] = useState(false)
-  const [erro, setErro] = useState('')
-  const [aviso, setAviso] = useState('')
-
-  const salvar = async () => {
-    setSalvando(true)
-    setErro('')
-    setAviso('')
-    try {
-      const emailMudou = novoEmail.trim() && novoEmail.trim() !== email
-      await onSalvar({
-        nome: nome.trim(),
-        telefone: telefone.trim() || null,
-        chavePix: chavePix.trim() || null,
-        novoEmail: emailMudou ? novoEmail.trim() : null,
-      })
-      setAviso(
-        emailMudou
-          ? 'Dados salvos. Enviamos um link de confirmação pro novo e-mail — até você confirmar, o login continua com o e-mail antigo.'
-          : 'Dados salvos.'
-      )
-    } catch (err) {
-      setErro(err.message)
-    } finally {
-      setSalvando(false)
-    }
-  }
-
+function CabecalhoPerfil({ perfilData }) {
+  const isAdmin = perfilData.papel === 'dono' || perfilData.papel === 'admin'
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '11px' }}>
-      <div style={GROUP_TITLE}>Dados pessoais</div>
-      <div style={FIELD_BOX}>
-        <div style={LABEL_STYLE}>Nome</div>
-        <input type="text" value={nome} onChange={(e) => setNome(e.target.value)} style={VALUE_TEXT} />
-      </div>
-      <div style={FIELD_BOX}>
-        <div style={LABEL_STYLE}>Telefone</div>
-        <input
-          type="tel"
-          placeholder="(11) 99999-0000"
-          value={telefone}
-          onChange={(e) => setTelefone(e.target.value)}
-          style={VALUE_TEXT}
-        />
-      </div>
-      <div style={FIELD_BOX}>
-        <div style={LABEL_STYLE}>E-mail</div>
-        <input type="email" value={novoEmail} onChange={(e) => setNovoEmail(e.target.value)} style={VALUE_TEXT} />
-      </div>
-      <div style={FIELD_BOX}>
-        <div style={LABEL_STYLE}>Chave Pix</div>
-        <input
-          type="text"
-          placeholder="seu@email.com"
-          value={chavePix}
-          onChange={(e) => setChavePix(e.target.value)}
-          style={VALUE_MONO}
-        />
-      </div>
-      {erro && <div style={{ font: '400 12.5px Barlow, sans-serif', color: '#F2843D' }}>{erro}</div>}
-      {aviso && <div style={{ font: '400 12.5px Barlow, sans-serif', color: '#C9F24D' }}>{aviso}</div>}
+    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
       <div
-        onClick={salvando ? undefined : salvar}
         style={{
-          marginTop: '2px',
-          padding: '15px',
-          borderRadius: '14px',
-          textAlign: 'center',
+          flex: 'none',
+          width: '76px',
+          height: '76px',
+          borderRadius: '24px',
           background: '#C9F24D',
           color: '#08130E',
-          font: '700 15px/1 Barlow, sans-serif',
-          cursor: salvando ? 'default' : 'pointer',
-          opacity: salvando ? 0.7 : 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          font: "700 28px/1 'Barlow Condensed', sans-serif",
+          letterSpacing: '.03em',
         }}
       >
-        {salvando ? 'Salvando…' : 'Salvar dados'}
+        {iniciais(perfilData.nome ?? 'Jogador')}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ font: "800 26px/1.05 'Barlow Condensed', sans-serif", letterSpacing: '-.01em' }}>{perfilData.nome}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '9px' }}>
+          <div
+            style={{
+              padding: '5px 10px',
+              borderRadius: '999px',
+              background: isAdmin ? 'rgba(201,242,77,.16)' : 'rgba(234,243,236,.1)',
+              color: isAdmin ? '#C9F24D' : 'rgba(234,243,236,.75)',
+              font: "500 10px/1 'IBM Plex Mono', monospace",
+              letterSpacing: '.08em',
+            }}
+          >
+            {perfilData.papel === 'dono' ? 'DONO' : perfilData.papel === 'admin' ? 'ADMIN' : 'JOGADOR'}
+          </div>
+          <div style={{ font: '400 12px/1 Barlow, sans-serif', color: 'rgba(234,243,236,.6)' }}>
+            desde {mesAnoCurto(new Date(perfilData.entrouEm))}
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
-export function HistoricoScreen({ historicoData, perfilData, email, onSalvarDadosPessoais, onSairDaConta }) {
+function EstatisticasPerfil({ perfilData }) {
+  return (
+    <div style={{ display: 'flex', gap: '10px' }}>
+      <div style={{ flex: 1, padding: '15px 16px', borderRadius: '16px', background: '#0F2117', border: '1px solid rgba(234,243,236,.07)' }}>
+        <div style={{ font: "800 26px/1 'Barlow Condensed', sans-serif", color: '#C9F24D' }}>{perfilData.presencasCount}</div>
+        <div style={{ font: '400 11.5px/1.25 Barlow, sans-serif', color: 'rgba(234,243,236,.7)', marginTop: '6px' }}>
+          presenças em {perfilData.totalEncerrados}
+        </div>
+      </div>
+      <div style={{ flex: 1, padding: '15px 16px', borderRadius: '16px', background: '#0F2117', border: '1px solid rgba(234,243,236,.07)' }}>
+        <div style={{ font: "800 26px/1 'Barlow Condensed', sans-serif" }}>{perfilData.faltas ?? 0}</div>
+        <div style={{ font: '400 11.5px/1.25 Barlow, sans-serif', color: 'rgba(234,243,236,.7)', marginTop: '6px' }}>
+          {perfilData.faltas === 1 ? 'falta no ano' : 'faltas no ano'}
+        </div>
+      </div>
+      <div style={{ flex: 1, padding: '15px 16px', borderRadius: '16px', background: '#0F2117', border: '1px solid rgba(234,243,236,.07)' }}>
+        <div style={{ font: "800 26px/1 'Barlow Condensed', sans-serif", color: perfilData.emDia ? '#C9F24D' : '#F2C14D' }}>
+          {perfilData.emDia ? 'em dia' : 'devendo'}
+        </div>
+        <div style={{ font: '400 11.5px/1.25 Barlow, sans-serif', color: 'rgba(234,243,236,.7)', marginTop: '6px' }}>pagamentos</div>
+      </div>
+    </div>
+  )
+}
+
+function LinhaMeusDados({ onAbrir }) {
+  return (
+    <div
+      onClick={onAbrir}
+      style={{
+        padding: '16px 18px',
+        borderRadius: '16px',
+        background: '#0F2117',
+        border: '1px solid rgba(234,243,236,.07)',
+        cursor: 'pointer',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ font: '600 15px/1 Barlow, sans-serif' }}>Meus dados</div>
+        <div style={{ font: '400 15px/1 Barlow, sans-serif', color: 'rgba(234,243,236,.4)' }}>›</div>
+      </div>
+      <div style={{ font: '400 12px/1.4 Barlow, sans-serif', color: 'rgba(234,243,236,.6)', marginTop: '6px' }}>
+        Nome, telefone, e-mail e Pix
+      </div>
+    </div>
+  )
+}
+
+export function HistoricoScreen({ historicoData, perfilData, onAbrirMeusDados, onSairDaConta }) {
   const { isAdmin, peladasNoAno, anoAtual, statB, jogos } = historicoData
   const statBLabel = isAdmin ? 'faltas no grupo' : 'suas presenças'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
       {perfilData && !perfilData.semGrupo && (
-        <DadosPessoais perfilData={perfilData} email={email} onSalvar={onSalvarDadosPessoais} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <CabecalhoPerfil perfilData={perfilData} />
+          <EstatisticasPerfil perfilData={perfilData} />
+          <LinhaMeusDados onAbrir={onAbrirMeusDados} />
+        </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
         <div style={{ display: 'flex', gap: '10px' }}>
           <div
             style={{
@@ -183,22 +192,21 @@ export function HistoricoScreen({ historicoData, perfilData, email, onSalvarDado
         </div>
       </div>
 
-      <div style={{ paddingTop: '4px', borderTop: '1px solid rgba(234,243,236,.07)' }}>
-        <div
-          onClick={onSairDaConta}
-          style={{
-            marginTop: '20px',
-            padding: '15px',
-            borderRadius: '14px',
-            textAlign: 'center',
-            border: '1px solid rgba(234,243,236,.14)',
-            color: 'rgba(234,243,236,.75)',
-            font: '600 15px/1 Barlow, sans-serif',
-            cursor: 'pointer',
-          }}
-        >
-          Sair da conta
-        </div>
+      <div
+        onClick={onSairDaConta}
+        style={{
+          marginTop: '24px',
+          padding: '15px',
+          borderRadius: '14px',
+          textAlign: 'center',
+          width: '100%',
+          border: '1px solid rgba(242,132,61,.35)',
+          color: '#F2843D',
+          font: '600 15px/1 Barlow, sans-serif',
+          cursor: 'pointer',
+        }}
+      >
+        Sair da conta
       </div>
     </div>
   )
