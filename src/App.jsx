@@ -30,10 +30,10 @@ const TAB_TITLES = {
   times: 'Sorteio',
   caixa: 'Rateio',
   grupo: 'Grupo',
-  hist: 'Histórico',
+  hist: 'Perfil',
 }
 
-function AppShell({ userId }) {
+function AppShell({ userId, userEmail }) {
   const [tab, setTab] = useState('jogo')
   const { loading, error, data, toggleMinhaPresenca, criarJogo, editarJogo, cancelarJogo, encerrarJogo } =
     useProximoJogo(userId)
@@ -184,6 +184,14 @@ function AppShell({ userId }) {
     await sairDoGrupo()
   }
 
+  const handleSalvarDadosPessoais = async ({ nome, telefone, chavePix, novoEmail }) => {
+    await salvarDados({ nome, telefone, chavePix, posicao: perfilData?.posicao ?? null })
+    if (novoEmail) {
+      const { error } = await supabase.auth.updateUser({ email: novoEmail })
+      if (error) throw error
+    }
+  }
+
   const papel = data?.papel
   const eyebrow = data?.jogo ? `Resenha de ${mesAbrev(new Date(data.jogo.inicio)).toLowerCase()}` : 'Resenha Fut'
 
@@ -288,7 +296,15 @@ function AppShell({ userId }) {
   } else if (histData?.semGrupo) {
     histContent = <CenterMessage>Você ainda não faz parte de um grupo.</CenterMessage>
   } else if (histData) {
-    histContent = <HistoricoScreen historicoData={histData} />
+    histContent = (
+      <HistoricoScreen
+        historicoData={histData}
+        perfilData={perfilData}
+        email={userEmail}
+        onSalvarDadosPessoais={handleSalvarDadosPessoais}
+        onSairDaConta={() => supabase.auth.signOut()}
+      />
+    )
   }
 
   const conviteLink = grupoData?.conviteSlug ? `${window.location.origin}/j/${grupoData.conviteSlug}` : ''
@@ -325,6 +341,7 @@ function AppShell({ userId }) {
         papel={papel}
         onConvidar={() => setSheet('convite')}
         onAbrirPerfil={() => setPerfilAberto(true)}
+        onSairDaConta={tab === 'jogo' ? () => supabase.auth.signOut() : undefined}
       />
       <div style={{ flex: 1, overflow: 'auto', padding: '0 20px 120px' }}>
         {tab === 'jogo' && jogoContent}
@@ -448,7 +465,7 @@ export default function App() {
   return (
     <div style={{ minHeight: '100dvh', background: '#08130E' }}>
       <div style={{ maxWidth: '480px', margin: '0 auto', minHeight: '100dvh', position: 'relative' }}>
-        <AppShell userId={session.user.id} />
+        <AppShell userId={session.user.id} userEmail={session.user.email} />
       </div>
     </div>
   )

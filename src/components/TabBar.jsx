@@ -3,7 +3,7 @@ const TABS = [
   { id: 'times', label: 'Times' },
   { id: 'caixa', label: 'Caixa' },
   { id: 'grupo', label: 'Grupo' },
-  { id: 'hist', label: 'Histórico' },
+  { id: 'hist', label: 'Perfil' },
 ]
 
 export function TabBar({ tab, onChange }) {
