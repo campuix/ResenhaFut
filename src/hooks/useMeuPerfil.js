@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { withJwtRetry } from '../lib/retry'
 
 const initialState = { loading: true, error: null, data: null }
 
@@ -10,6 +11,7 @@ export function useMeuPerfil(userId) {
     if (!userId) return
     setState((s) => ({ ...s, loading: true, error: null }))
     try {
+      await withJwtRetry(async () => {
       const [perfilRes, membroRes] = await Promise.all([
         supabase.from('profiles').select('nome, telefone, chave_pix').eq('id', userId).single(),
         supabase
@@ -85,6 +87,7 @@ export function useMeuPerfil(userId) {
           presencasCount,
           emDia,
         },
+      })
       })
     } catch (err) {
       setState({ loading: false, error: err, data: null })

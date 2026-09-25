@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { N_TIMES, VESTS, embaralhar, serpentina } from '../lib/vests'
+import { withJwtRetry } from '../lib/retry'
 
 const initialState = { loading: true, error: null, data: null }
 
@@ -11,6 +12,7 @@ export function useSorteio(userId) {
     if (!userId) return
     setState((s) => ({ ...s, loading: true, error: null }))
     try {
+      await withJwtRetry(async () => {
       const { data: membro, error: membroErr } = await supabase
         .from('membros')
         .select('grupo_id, papel')
@@ -64,6 +66,7 @@ export function useSorteio(userId) {
           membrosPub: membrosRes.data ?? [],
           timesSalvos: timesRes.data ?? [],
         },
+      })
       })
     } catch (err) {
       setState({ loading: false, error: err, data: null })

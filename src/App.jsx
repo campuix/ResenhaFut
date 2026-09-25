@@ -12,6 +12,7 @@ import { Header } from './components/Header'
 import { TabBar } from './components/TabBar'
 import { BottomSheet } from './components/BottomSheet'
 import { CenterMessage } from './components/CenterMessage'
+import { ErrorScreen } from './components/ErrorScreen'
 import { LoginScreen } from './screens/Login'
 import { JoinScreen } from './screens/Join'
 import { PrivacidadeScreen, TermosScreen } from './screens/Legal'
@@ -36,10 +37,25 @@ const TAB_TITLES = {
 
 function AppShell({ userId, userEmail }) {
   const [tab, setTab] = useState('jogo')
-  const { loading, error, data, toggleMinhaPresenca, criarJogo, editarJogo, cancelarJogo, encerrarJogo } =
-    useProximoJogo(userId)
+  const {
+    loading,
+    error,
+    data,
+    toggleMinhaPresenca,
+    criarJogo,
+    editarJogo,
+    cancelarJogo,
+    encerrarJogo,
+    refetch: refetchJogo,
+  } = useProximoJogo(userId)
   const [toggling, setToggling] = useState(false)
-  const { loading: sorteioLoading, error: sorteioError, data: sorteioData, sortear } = useSorteio(userId)
+  const {
+    loading: sorteioLoading,
+    error: sorteioError,
+    data: sorteioData,
+    sortear,
+    refetch: refetchSorteio,
+  } = useSorteio(userId)
   const {
     loading: rateioLoading,
     error: rateioError,
@@ -47,6 +63,7 @@ function AppShell({ userId, userEmail }) {
     alternarPagamento,
     definirResponsavel,
     salvarMinhaChavePix,
+    refetch: refetchRateio,
   } = useRateio(userId)
   const {
     loading: grupoLoading,
@@ -56,7 +73,7 @@ function AppShell({ userId, userEmail }) {
     removerMembro,
     refetch: refetchGrupo,
   } = useGrupo(userId)
-  const { loading: histLoading, error: histError, data: histData } = useHistorico(userId)
+  const { loading: histLoading, error: histError, data: histData, refetch: refetchHist } = useHistorico(userId)
   const { loading: perfilLoading, error: perfilError, data: perfilData, salvarDados, sairDoGrupo } = useMeuPerfil(userId)
 
   const [sheet, setSheet] = useState(null)
@@ -201,7 +218,7 @@ function AppShell({ userId, userEmail }) {
   if (loading) {
     jogoContent = <CenterMessage>Carregando…</CenterMessage>
   } else if (error) {
-    jogoContent = <CenterMessage>Não deu para carregar: {error.message}</CenterMessage>
+    jogoContent = <ErrorScreen mensagem={error.message} onTentarNovamente={refetchJogo} />
   } else if (data?.semGrupo) {
     jogoContent = <CenterMessage>Você ainda não faz parte de um grupo.</CenterMessage>
   } else if (data?.semJogo) {
@@ -240,7 +257,7 @@ function AppShell({ userId, userEmail }) {
   if (sorteioLoading) {
     timesContent = <CenterMessage>Carregando…</CenterMessage>
   } else if (sorteioError) {
-    timesContent = <CenterMessage>Não deu para carregar: {sorteioError.message}</CenterMessage>
+    timesContent = <ErrorScreen mensagem={sorteioError.message} onTentarNovamente={refetchSorteio} />
   } else if (sorteioData?.semGrupo) {
     timesContent = <CenterMessage>Você ainda não faz parte de um grupo.</CenterMessage>
   } else if (sorteioData?.semJogo) {
@@ -253,7 +270,7 @@ function AppShell({ userId, userEmail }) {
   if (rateioLoading) {
     caixaContent = <CenterMessage>Carregando…</CenterMessage>
   } else if (rateioError) {
-    caixaContent = <CenterMessage>Não deu para carregar: {rateioError.message}</CenterMessage>
+    caixaContent = <ErrorScreen mensagem={rateioError.message} onTentarNovamente={refetchRateio} />
   } else if (rateioData?.semGrupo) {
     caixaContent = <CenterMessage>Você ainda não faz parte de um grupo.</CenterMessage>
   } else if (rateioData?.semJogo) {
@@ -275,7 +292,7 @@ function AppShell({ userId, userEmail }) {
   if (grupoLoading) {
     grupoContent = <CenterMessage>Carregando…</CenterMessage>
   } else if (grupoError) {
-    grupoContent = <CenterMessage>Não deu para carregar: {grupoError.message}</CenterMessage>
+    grupoContent = <ErrorScreen mensagem={grupoError.message} onTentarNovamente={refetchGrupo} />
   } else if (grupoData?.semGrupo) {
     grupoContent = <CenterMessage>Você ainda não faz parte de um grupo.</CenterMessage>
   } else if (grupoData) {
@@ -294,7 +311,7 @@ function AppShell({ userId, userEmail }) {
   if (histLoading) {
     histContent = <CenterMessage>Carregando…</CenterMessage>
   } else if (histError) {
-    histContent = <CenterMessage>Não deu para carregar: {histError.message}</CenterMessage>
+    histContent = <ErrorScreen mensagem={histError.message} onTentarNovamente={refetchHist} />
   } else if (histData?.semGrupo) {
     histContent = <CenterMessage>Você ainda não faz parte de um grupo.</CenterMessage>
   } else if (histData) {

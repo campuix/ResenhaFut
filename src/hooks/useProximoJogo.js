@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { withJwtRetry } from '../lib/retry'
 
 const initialState = { loading: true, error: null, data: null }
 
@@ -10,57 +11,59 @@ export function useProximoJogo(userId) {
     if (!userId) return
     setState((s) => ({ ...s, loading: true, error: null }))
     try {
-      const { data: membro, error: membroErr } = await supabase
-        .from('membros')
-        .select('grupo_id, papel')
-        .eq('usuario_id', userId)
-        .limit(1)
-        .maybeSingle()
-      if (membroErr) throw membroErr
-      if (!membro) {
-        setState({ loading: false, error: null, data: { semGrupo: true } })
-        return
-      }
+      await withJwtRetry(async () => {
+        const { data: membro, error: membroErr } = await supabase
+          .from('membros')
+          .select('grupo_id, papel')
+          .eq('usuario_id', userId)
+          .limit(1)
+          .maybeSingle()
+        if (membroErr) throw membroErr
+        if (!membro) {
+          setState({ loading: false, error: null, data: { semGrupo: true } })
+          return
+        }
 
-      const { data: jogo, error: jogoErr } = await supabase
-        .from('jogos')
-        .select('*')
-        .eq('grupo_id', membro.grupo_id)
-        .in('status', ['aberto', 'lotado'])
-        .order('inicio', { ascending: true })
-        .limit(1)
-        .maybeSingle()
-      if (jogoErr) throw jogoErr
-      if (!jogo) {
-        setState({ loading: false, error: null, data: { papel: membro.papel, grupoId: membro.grupo_id, semJogo: true } })
-        return
-      }
+        const { data: jogo, error: jogoErr } = await supabase
+          .from('jogos')
+          .select('*')
+          .eq('grupo_id', membro.grupo_id)
+          .in('status', ['aberto', 'lotado'])
+          .order('inicio', { ascending: true })
+          .limit(1)
+          .maybeSingle()
+        if (jogoErr) throw jogoErr
+        if (!jogo) {
+          setState({ loading: false, error: null, data: { papel: membro.papel, grupoId: membro.grupo_id, semJogo: true } })
+          return
+        }
 
-      const [presRes, membrosRes, pagRes] = await Promise.all([
-        supabase
-          .from('presencas')
-          .select('usuario_id, situacao, ordem, profiles(nome)')
-          .eq('jogo_id', jogo.id)
-          .in('situacao', ['confirmado', 'espera'])
-          .order('ordem', { ascending: true }),
-        supabase.from('membros_publicos').select('usuario_id, nivel, posicao').eq('grupo_id', membro.grupo_id),
-        supabase.from('pagamentos').select('usuario_id, situacao').eq('jogo_id', jogo.id),
-      ])
-      if (presRes.error) throw presRes.error
-      if (membrosRes.error) throw membrosRes.error
-      if (pagRes.error) throw pagRes.error
+        const [presRes, membrosRes, pagRes] = await Promise.all([
+          supabase
+            .from('presencas')
+            .select('usuario_id, situacao, ordem, profiles(nome)')
+            .eq('jogo_id', jogo.id)
+            .in('situacao', ['confirmado', 'espera'])
+            .order('ordem', { ascending: true }),
+          supabase.from('membros_publicos').select('usuario_id, nivel, posicao').eq('grupo_id', membro.grupo_id),
+          supabase.from('pagamentos').select('usuario_id, situacao').eq('jogo_id', jogo.id),
+        ])
+        if (presRes.error) throw presRes.error
+        if (membrosRes.error) throw membrosRes.error
+        if (pagRes.error) throw pagRes.error
 
-      setState({
-        loading: false,
-        error: null,
-        data: {
-          papel: membro.papel,
-          grupoId: membro.grupo_id,
-          jogo,
-          presencas: presRes.data ?? [],
-          membrosPub: membrosRes.data ?? [],
-          pagamentos: pagRes.data ?? [],
-        },
+        setState({
+          loading: false,
+          error: null,
+          data: {
+            papel: membro.papel,
+            grupoId: membro.grupo_id,
+            jogo,
+            presencas: presRes.data ?? [],
+            membrosPub: membrosRes.data ?? [],
+            pagamentos: pagRes.data ?? [],
+          },
+        })
       })
     } catch (err) {
       setState({ loading: false, error: err, data: null })
