@@ -14,6 +14,7 @@ import { BottomSheet } from './components/BottomSheet'
 import { CenterMessage } from './components/CenterMessage'
 import { LoginScreen } from './screens/Login'
 import { JoinScreen } from './screens/Join'
+import { PrivacidadeScreen, TermosScreen } from './screens/Legal'
 import { ProximoJogoScreen } from './screens/ProximoJogo'
 import { SorteioScreen } from './screens/Sorteio'
 import { RateioScreen } from './screens/Rateio'
@@ -422,6 +423,13 @@ export default function App() {
         de desenvolvimento.
       </CenterMessage>
     )
+  }
+
+  if (window.location.pathname === '/privacidade') {
+    return <PrivacidadeScreen />
+  }
+  if (window.location.pathname === '/termos') {
+    return <TermosScreen />
   }
 
   const matchConvite = window.location.pathname.match(/^\/j\/([^/]+)/)

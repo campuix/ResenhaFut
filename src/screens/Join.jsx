@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import { CenterMessage } from '../components/CenterMessage'
+import { GoogleIcon } from '../components/GoogleIcon'
 
 function Shell({ children }) {
   return (
@@ -100,6 +101,13 @@ export function JoinScreen({ slug }) {
       window.location.href = '/'
     }
   }, [session, grupo, jaMembro])
+
+  const entrarComGoogle = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.href },
+    })
+  }
 
   const enviarLinkMagico = async (e) => {
     e.preventDefault()
@@ -224,6 +232,36 @@ export function JoinScreen({ slug }) {
               <div style={{ font: '400 12.5px Barlow, sans-serif', color: '#F2843D' }}>{erroLink}</div>
             )}
           </form>
+        )}
+
+        {linkStatus !== 'sent' && (
+          <div style={{ width: '100%', maxWidth: '340px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(234,243,236,.12)' }} />
+              <div style={{ font: '500 11px/1 Barlow, sans-serif', color: 'rgba(234,243,236,.5)' }}>ou</div>
+              <div style={{ flex: 1, height: '1px', background: 'rgba(234,243,236,.12)' }} />
+            </div>
+            <button
+              type="button"
+              onClick={entrarComGoogle}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '10px',
+                padding: '14px 20px',
+                borderRadius: '14px',
+                border: '1px solid rgba(234,243,236,.15)',
+                background: '#EAF3EC',
+                color: '#1A1A1A',
+                font: '600 15px Barlow, sans-serif',
+                cursor: 'pointer',
+              }}
+            >
+              <GoogleIcon />
+              Continuar com Google
+            </button>
+          </div>
         )}
       </Shell>
     )

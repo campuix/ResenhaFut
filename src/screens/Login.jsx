@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { GoogleIcon } from '../components/GoogleIcon'
 
 export function LoginScreen() {
   const [email, setEmail] = useState('')
@@ -21,6 +22,13 @@ export function LoginScreen() {
     } else {
       setStatus('sent')
     }
+  }
+
+  const entrarComGoogle = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    })
   }
 
   return (
@@ -95,6 +103,45 @@ export function LoginScreen() {
           )}
         </form>
       )}
+
+      {status !== 'sent' && (
+        <div style={{ width: '100%', maxWidth: '340px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(234,243,236,.12)' }} />
+            <div style={{ font: '500 11px/1 Barlow, sans-serif', color: 'rgba(234,243,236,.5)' }}>ou</div>
+            <div style={{ flex: 1, height: '1px', background: 'rgba(234,243,236,.12)' }} />
+          </div>
+          <button
+            type="button"
+            onClick={entrarComGoogle}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              padding: '14px 20px',
+              borderRadius: '14px',
+              border: '1px solid rgba(234,243,236,.15)',
+              background: '#EAF3EC',
+              color: '#1A1A1A',
+              font: '600 15px Barlow, sans-serif',
+              cursor: 'pointer',
+            }}
+          >
+            <GoogleIcon />
+            Continuar com Google
+          </button>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: '16px', marginTop: '4px' }}>
+        <a href="/privacidade" style={{ font: '400 11.5px/1 Barlow, sans-serif', color: 'rgba(234,243,236,.4)' }}>
+          Privacidade
+        </a>
+        <a href="/termos" style={{ font: '400 11.5px/1 Barlow, sans-serif', color: 'rgba(234,243,236,.4)' }}>
+          Termos de uso
+        </a>
+      </div>
     </div>
   )
 }
