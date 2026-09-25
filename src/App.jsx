@@ -7,6 +7,7 @@ import { useGrupo } from './hooks/useGrupo'
 import { useHistorico } from './hooks/useHistorico'
 import { useMeuPerfil } from './hooks/useMeuPerfil'
 import { usePerfilMembro } from './hooks/usePerfilMembro'
+import { useGarantirNomeCompleto } from './hooks/useGarantirNomeCompleto'
 import { supabase, supabaseConfigured } from './lib/supabase'
 import { Header } from './components/Header'
 import { TabBar } from './components/TabBar'
@@ -16,6 +17,7 @@ import { ErrorScreen } from './components/ErrorScreen'
 import { LoginScreen } from './screens/Login'
 import { JoinScreen } from './screens/Join'
 import { PrivacidadeScreen, TermosScreen } from './screens/Legal'
+import { NomeCompletoScreen } from './screens/NomeCompleto'
 import { ProximoJogoScreen } from './screens/ProximoJogo'
 import { SorteioScreen } from './screens/Sorteio'
 import { RateioScreen } from './screens/Rateio'
@@ -212,7 +214,7 @@ function AppShell({ userId, userEmail }) {
   }
 
   const papel = data?.papel
-  const eyebrow = data?.jogo ? `Resenha de ${mesAbrev(new Date(data.jogo.inicio)).toLowerCase()}` : 'Resenha Fut'
+  const eyebrow = data?.jogo ? `Fut de ${mesAbrev(new Date(data.jogo.inicio)).toLowerCase()}` : 'Resenha Fut'
 
   let jogoContent
   if (loading) {
@@ -486,6 +488,20 @@ export default function App() {
 
   if (session === null) {
     return <LoginScreen />
+  }
+
+  return <AppComSessao session={session} />
+}
+
+function AppComSessao({ session }) {
+  const [nomeStatus, marcarNomeResolvido] = useGarantirNomeCompleto(session)
+
+  if (nomeStatus === 'checking') {
+    return <CenterMessage>Carregando…</CenterMessage>
+  }
+
+  if (nomeStatus === 'precisa-nome') {
+    return <NomeCompletoScreen userId={session.user.id} onEntrar={marcarNomeResolvido} />
   }
 
   return (

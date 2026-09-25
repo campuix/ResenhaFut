@@ -138,7 +138,7 @@ export function SorteioScreen({ userId, sorteioData, onSortear }) {
             }}
           />
           <div style={{ font: '600 15px/1 Barlow, sans-serif', color: 'rgba(234,243,236,.6)' }}>
-            Misturando a resenha…
+            Misturando o jogo…
           </div>
         </div>
       ) : !hasTeams ? (

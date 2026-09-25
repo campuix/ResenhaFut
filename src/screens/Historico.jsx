@@ -120,7 +120,7 @@ export function HistoricoScreen({ historicoData, perfilData, onAbrirMeusDados, o
           >
             <div style={{ font: "800 30px/1 'Barlow Condensed', sans-serif", color: '#C9F24D' }}>{peladasNoAno}</div>
             <div style={{ font: '400 12px/1.2 Barlow, sans-serif', color: 'rgba(234,243,236,.7)', marginTop: '5px' }}>
-              peladas em {anoAtual}
+              {peladasNoAno === 1 ? 'jogo' : 'jogos'} em {anoAtual}
             </div>
           </div>
           <div
@@ -182,9 +182,6 @@ export function HistoricoScreen({ historicoData, perfilData, onAbrirMeusDados, o
                   <div style={{ font: '400 11.5px/1.2 Barlow, sans-serif', color: 'rgba(234,243,236,.68)', marginTop: '3px' }}>
                     {j.confirmados} {j.confirmados === 1 ? 'jogador' : 'jogadores'}
                   </div>
-                </div>
-                <div style={{ flex: 'none', font: '600 12px/1 Barlow, sans-serif', color: '#C9F24D', cursor: 'pointer' }} title="Em breve">
-                  Súmula
                 </div>
               </div>
             )

@@ -9,7 +9,7 @@ const ROLE_OPTIONS = [
 ]
 
 const COPY = {
-  convite: ['Chamar a resenha', 'Manda o link no grupo. Quem confirmar entra na lista; cheio, vai pra espera.'],
+  convite: ['Chamar o fut', 'Manda o link no grupo. Quem confirmar entra na lista; cheio, vai pra espera.'],
   cobrar: ['Cobrar no grupo', 'A mensagem já vai com o valor e quantos ainda estão devendo.'],
   responsavel: ['Responsável pelo Pix', 'Quem administra o rateio desta partida. Só essa pessoa consegue cadastrar a própria chave.'],
   papel: 'Admin marca jogo, confirma pagamento e mexe no grupo. Só o dono promove outro admin.',
@@ -46,7 +46,7 @@ function ConviteBody({ link }) {
         {link}
       </div>
       <a
-        href={waLink(`Chamada pra resenha! Confirma sua presença: ${link}`)}
+        href={waLink(`Chamada pro fut! Confirma sua presença: ${link}`)}
         target="_blank"
         rel="noopener noreferrer"
         style={{
